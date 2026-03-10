@@ -1,6 +1,6 @@
 "use server"
 
-import { generateObject } from "ai"
+import { generateText, Output } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
 import type { JobAnalysisResult } from "@/types/job"
@@ -24,11 +24,13 @@ export async function analyzeJobWithAI(jobDescription: string): Promise<JobAnaly
     return { keywords: [], byCategory: undefined }
   }
 
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: openai("gpt-4o-mini"),
-    schema: jobAnalysisSchema,
-    schemaName: "JobAnalysis",
-    schemaDescription: "Structured analysis of a job posting: keywords and categorized requirements",
+    output: Output.object({
+      schema: jobAnalysisSchema,
+      name: "JobAnalysis",
+      description: "Structured analysis of a job posting: keywords and categorized requirements",
+    }),
     prompt: `Analyze this job posting and extract:
 1. Important keywords and phrases that should appear on a candidate's CV for ATS and recruiter matching (skills, technologies, qualifications, action verbs).
 2. Optionally group them into: skills (soft/hard skills), tools (technologies, frameworks, software), responsibilities (key responsibility phrases).
@@ -38,17 +40,17 @@ ${text}`,
   })
 
   return {
-    keywords: object.keywords,
+    keywords: output.keywords,
     byCategory:
-      object.byCategory &&
-      (object.byCategory.skills?.length ||
-        object.byCategory.tools?.length ||
-        object.byCategory.responsibilities?.length)
+      output.byCategory &&
+      (output.byCategory.skills?.length ||
+        output.byCategory.tools?.length ||
+        output.byCategory.responsibilities?.length)
         ? {
-            ...(object.byCategory.skills?.length ? { skills: object.byCategory.skills } : undefined),
-            ...(object.byCategory.tools?.length ? { tools: object.byCategory.tools } : undefined),
-            ...(object.byCategory.responsibilities?.length
-              ? { responsibilities: object.byCategory.responsibilities }
+            ...(output.byCategory.skills?.length ? { skills: output.byCategory.skills } : undefined),
+            ...(output.byCategory.tools?.length ? { tools: output.byCategory.tools } : undefined),
+            ...(output.byCategory.responsibilities?.length
+              ? { responsibilities: output.byCategory.responsibilities }
               : undefined),
           }
         : undefined,

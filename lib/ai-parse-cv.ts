@@ -1,6 +1,6 @@
 "use server"
 
-import { generateObject } from "ai"
+import { generateText, Output } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
 import type { CvContent, CvExperience, CvEducation } from "@/types/cv"
@@ -36,11 +36,13 @@ export async function parseCvTextWithAI(rawCvText: string): Promise<CvContent> {
     throw new Error("CV text is empty")
   }
 
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: openai("gpt-4o-mini"),
-    schema: cvContentSchema,
-    schemaName: "ParsedCV",
-    schemaDescription: "Structured CV content extracted from raw text",
+    output: Output.object({
+      schema: cvContentSchema,
+      name: "ParsedCV",
+      description: "Structured CV content extracted from raw text",
+    }),
     prompt: `Extract structured CV/resume data from the following raw text. Preserve the candidate's exact name, email, phone, job titles, companies, education, and skills. For experience entries, extract 2-6 bullet points per role. For skills, produce a clean list (comma-separated or one per line in the output array). If something is missing (e.g. no phone), omit it. Keep the same language (English or Spanish) as the source.
 
 Raw CV text:
@@ -48,11 +50,11 @@ ${text}`,
   })
 
   return {
-    name: object.name,
-    email: object.email,
-    phone: object.phone,
-    summary: object.summary,
-    experience: object.experience.map(
+    name: output.name,
+    email: output.email,
+    phone: output.phone,
+    summary: output.summary,
+    experience: output.experience.map(
       (e): CvExperience => ({
         role: e.role,
         company: e.company,
@@ -60,13 +62,13 @@ ${text}`,
         bullets: e.bullets,
       }),
     ),
-    education: object.education.map(
+    education: output.education.map(
       (e): CvEducation => ({
         degree: e.degree,
         institution: e.institution,
         dates: e.dates,
       }),
     ),
-    skills: object.skills,
+    skills: output.skills,
   }
 }

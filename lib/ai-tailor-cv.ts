@@ -1,6 +1,6 @@
 "use server"
 
-import { generateObject } from "ai"
+import { generateText, Output } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
 import type { CvContent, CvExperience, CvEducation } from "@/types/cv"
@@ -75,21 +75,23 @@ ${jobText}
 
 Produce the tailored CV as structured data. Preserve all factual information; only rephrase, reorder, and emphasize to match the job.`
 
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: openai("gpt-4o"),
-    schema: cvContentSchema,
-    schemaName: "TailoredCV",
-    schemaDescription: "Structured CV content tailored to a job posting",
+    output: Output.object({
+      schema: cvContentSchema,
+      name: "TailoredCV",
+      description: "Structured CV content tailored to a job posting",
+    }),
     system: systemPrompt,
     prompt: userPrompt,
   })
 
   return {
-    name: object.name,
-    email: object.email,
-    phone: object.phone,
-    summary: object.summary,
-    experience: object.experience.map(
+    name: output.name,
+    email: output.email,
+    phone: output.phone,
+    summary: output.summary,
+    experience: output.experience.map(
       (e): CvExperience => ({
         role: e.role,
         company: e.company,
@@ -97,13 +99,13 @@ Produce the tailored CV as structured data. Preserve all factual information; on
         bullets: e.bullets,
       }),
     ),
-    education: object.education.map(
+    education: output.education.map(
       (e): CvEducation => ({
         degree: e.degree,
         institution: e.institution,
         dates: e.dates,
       }),
     ),
-    skills: object.skills,
+    skills: output.skills,
   }
 }

@@ -55,7 +55,7 @@ export function computeAtsScore(
   cv: CvContent,
 ): number {
   const { keywordCoverage } = computeKeywordCoverage(jobAnalysis, cv)
-  let score = keywordCoverage * 0.7 // 70% weight on keyword match
+  let score = keywordCoverage * 0.7
 
   if (cv.summary?.trim()) score += 5
   if (cv.experience.length > 0) score += 5
