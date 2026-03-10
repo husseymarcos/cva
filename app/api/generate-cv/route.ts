@@ -16,6 +16,13 @@ const ALLOWED_TYPES = [
 
 export async function POST(request: Request) {
   try {
+    if (!process.env.OPENAI_API_KEY?.trim()) {
+      return NextResponse.json(
+        { error: "OpenAI API key is not configured. Set OPENAI_API_KEY in your environment." },
+        { status: 503 }
+      )
+    }
+
     const contentType = request.headers.get("content-type") ?? ""
     if (!contentType.includes("multipart/form-data")) {
       return NextResponse.json(
@@ -90,9 +97,18 @@ export async function POST(request: Request) {
       missingKeywords,
     })
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    const cause = err instanceof Error && err.cause instanceof Error ? err.cause.message : null
     console.error("[/api/generate-cv]", err)
+    const isDev = process.env.NODE_ENV === "development"
+    const safeMessage =
+      !process.env.OPENAI_API_KEY
+        ? "OpenAI API key is missing. Set OPENAI_API_KEY in your environment."
+        : isDev && (message || cause)
+          ? `${message}${cause ? ` (${cause})` : ""}`
+          : "Failed to generate tailored CV. Please try again."
     return NextResponse.json(
-      { error: "Failed to generate tailored CV. Please try again." },
+      { error: safeMessage },
       { status: 500 }
     )
   }
