@@ -152,10 +152,8 @@ export default function Home() {
               className="w-full sm:w-auto"
               onClick={handleGenerate}
               disabled={
-                !jobDescription &&
-                !baseCv &&
-                !jobDescriptionFileName &&
-                !baseCvFileName
+                !(jobDescription || jobDescriptionFileName) ||
+                !(baseCv || baseCvFileName)
               }
             >
               Generate tailored CV
