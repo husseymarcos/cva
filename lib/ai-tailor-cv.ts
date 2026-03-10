@@ -28,11 +28,13 @@ const cvContentSchema = z.object({
   skills: z.array(z.string()),
 })
 
+const MAX_JOB_LENGTH = 50_000
+
 export async function tailorCvWithAI(
   baseCv: CvContent,
   jobDescription: string,
 ): Promise<CvContent> {
-  const jobText = jobDescription.slice(0, 30_000).trim()
+  const jobText = jobDescription.slice(0, MAX_JOB_LENGTH).trim()
   const systemPrompt = `You are a professional CV writer and ATS (Applicant Tracking System) expert. Your task is to adapt a candidate's base CV so it best fits a specific job posting.
 
 Rules:
