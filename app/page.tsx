@@ -138,14 +138,14 @@ export default function Home() {
             <Button
               type="button"
               variant="outline"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto rounded-md"
               onClick={handleClear}
             >
               Clear
             </Button>
             <Button
               type="button"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto rounded-md"
               onClick={handleGenerate}
               disabled={
                 !jobDescription &&
