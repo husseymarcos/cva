@@ -21,12 +21,14 @@ export default function Home() {
     string | null
   >(null)
   const [baseCvFileName, setBaseCvFileName] = useState<string | null>(null)
+  const [fileInputKey, setFileInputKey] = useState(0)
 
   const handleClear = () => {
     setJobDescription("")
     setBaseCv("")
     setJobDescriptionFileName(null)
     setBaseCvFileName(null)
+    setFileInputKey((k) => k + 1)
   }
 
   const handleJobDescriptionFileChange = (
@@ -83,6 +85,7 @@ export default function Home() {
               <div className="flex flex-col gap-1 text-[11px] md:text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Input
+                    key={`job-description-file-${fileInputKey}`}
                     id="job-description-file"
                     type="file"
                     accept=".txt,.pdf,.doc,.docx"
@@ -114,6 +117,7 @@ export default function Home() {
               <div className="flex flex-col gap-1 text-[11px] md:text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Input
+                    key={`base-cv-file-${fileInputKey}`}
                     id="base-cv-file"
                     type="file"
                     accept=".txt,.pdf,.doc,.docx"
@@ -138,14 +142,14 @@ export default function Home() {
             <Button
               type="button"
               variant="outline"
-              className="w-full sm:w-auto rounded-md"
+              className="w-full sm:w-auto"
               onClick={handleClear}
             >
               Clear
             </Button>
             <Button
               type="button"
-              className="w-full sm:w-auto rounded-md"
+              className="w-full sm:w-auto"
               onClick={handleGenerate}
               disabled={
                 !jobDescription &&
