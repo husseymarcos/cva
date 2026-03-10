@@ -14,6 +14,8 @@ function esc(s: string): string {
     .replace(/\$/g, "\\$")
     .replace(/</g, "\\<")
     .replace(/>/g, "\\>")
+    .replace(/\{/g, "\\{")
+    .replace(/\}/g, "\\}")
 }
 
 function section(title: string, body: string): string {
