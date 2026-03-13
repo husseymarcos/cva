@@ -6,7 +6,7 @@ import { tailorCvWithAI } from "@/lib/ai-tailor-cv"
 import { compileCvToPdf } from "@/lib/cv-pdf"
 import { computeKeywordCoverage, computeAtsScore } from "@/lib/ats-metrics"
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024
 const MAX_JOB_LENGTH = 50_000
 const ALLOWED_TYPES = [
   "application/pdf",
@@ -16,9 +16,9 @@ const ALLOWED_TYPES = [
 
 export async function POST(request: Request) {
   try {
-    if (!process.env.OPENAI_API_KEY?.trim()) {
+    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY?.trim()) {
       return NextResponse.json(
-        { error: "OpenAI API key is not configured. Set OPENAI_API_KEY in your environment." },
+        { error: "Google API key is not configured. Set GOOGLE_GENERATIVE_AI_API_KEY in your environment." },
         { status: 503 }
       )
     }
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const contentType = request.headers.get("content-type") ?? ""
     if (!contentType.includes("multipart/form-data")) {
       return NextResponse.json(
-        { error: "Content-Type must be multipart/form-data with cv_file and job_description." },
+        { error: "Content-Type must be multipart/form-data." },
         { status: 400 }
       )
     }
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     if (cvFile.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024} MB.` },
+        { error: "File too large." },
         { status: 400 }
       )
     }
@@ -97,18 +97,9 @@ export async function POST(request: Request) {
       missingKeywords,
     })
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    const cause = err instanceof Error && err.cause instanceof Error ? err.cause.message : null
     console.error("[/api/generate-cv]", err)
-    const isDev = process.env.NODE_ENV === "development"
-    const safeMessage =
-      !process.env.OPENAI_API_KEY
-        ? "OpenAI API key is missing. Set OPENAI_API_KEY in your environment."
-        : isDev && (message || cause)
-          ? `${message}${cause ? ` (${cause})` : ""}`
-          : "Failed to generate tailored CV. Please try again."
     return NextResponse.json(
-      { error: safeMessage },
+      { error: "Failed to generate tailored CV. Please try again." },
       { status: 500 }
     )
   }

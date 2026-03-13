@@ -14,7 +14,7 @@ export async function parseCvTextWithAI(rawCvText: string): Promise<CvContent> {
   }
 
   const { output } = await generateText({
-    model: google("gemini-1.5-flash"),
+    model: google("gemini-1.5-flash-latest"),
     output: Output.object({
       schema: cvContentSchema,
       name: "ParsedCV",

@@ -14,7 +14,7 @@ export async function tailorCvWithAI(
   const jobText = jobDescription.slice(0, MAX_JOB_LENGTH).trim()
   
   const { output } = await generateText({
-    model: google("gemini-1.5-pro"),
+    model: google("gemini-1.5-pro-latest"),
     output: Output.object({
       schema: cvContentSchema,
       name: "TailoredCV",

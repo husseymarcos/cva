@@ -131,13 +131,6 @@ export default function Home() {
                   onChange={handleBaseCvFileChange}
                   disabled={loading}
                 />
-                <p>Upload your CV in PDF or DOCX format.</p>
-                {baseCvFile && (
-                  <p className="text-[11px] text-muted-foreground">
-                    Selected file:{" "}
-                    <span className="font-medium">{baseCvFile.name}</span>
-                  </p>
-                )}
               </div>
             </div>
 
