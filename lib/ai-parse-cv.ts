@@ -1,7 +1,7 @@
 "use server"
 
 import { generateText, Output } from "ai"
-import { google } from "@ai-sdk/google"
+import { fastModel } from "./ai"
 import { cvContentSchema } from "./schemas"
 import type { CvContent } from "@/types/cv"
 
@@ -14,7 +14,7 @@ export async function parseCvTextWithAI(rawCvText: string): Promise<CvContent> {
   }
 
   const { output } = await generateText({
-    model: google("gemini-1.5-flash-latest"),
+    model: fastModel,
     output: Output.object({
       schema: cvContentSchema,
       name: "ParsedCV",

@@ -1,7 +1,7 @@
 "use server"
 
 import { generateText, Output } from "ai"
-import { google } from "@ai-sdk/google"
+import { proModel } from "./ai"
 import { cvContentSchema } from "./schemas"
 import type { CvContent } from "@/types/cv"
 
@@ -14,7 +14,7 @@ export async function tailorCvWithAI(
   const jobText = jobDescription.slice(0, MAX_JOB_LENGTH).trim()
   
   const { output } = await generateText({
-    model: google("gemini-1.5-pro-latest"),
+    model: proModel,
     output: Output.object({
       schema: cvContentSchema,
       name: "TailoredCV",

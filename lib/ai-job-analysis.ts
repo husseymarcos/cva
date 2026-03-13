@@ -1,7 +1,7 @@
 "use server"
 
 import { generateText, Output } from "ai"
-import { google } from "@ai-sdk/google"
+import { fastModel } from "./ai"
 import { jobAnalysisSchema } from "./schemas"
 import type { JobAnalysisResult } from "@/types/job"
 
@@ -14,7 +14,7 @@ export async function analyzeJobWithAI(jobDescription: string): Promise<JobAnaly
   }
 
   const { output } = await generateText({
-    model: google("gemini-1.5-flash-latest"),
+    model: fastModel,
     output: Output.object({
       schema: jobAnalysisSchema,
       name: "JobAnalysis",
