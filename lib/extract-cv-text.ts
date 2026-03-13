@@ -3,47 +3,33 @@ import mammoth from "mammoth"
 
 export type ExtractResult = { ok: true; text: string } | { ok: false; error: string }
 
-export async function extractTextFromCvFile(
-  buffer: Buffer,
-  mimeType: string,
-): Promise<ExtractResult> {
-  const type = mimeType.toLowerCase()
-  if (type === "application/pdf") {
-    return extractFromPdf(buffer)
-  }
-  if (
-    type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-    type === "application/msword"
-  ) {
-    return extractFromDocx(buffer)
-  }
-  return { ok: false, error: "Unsupported file type. Use PDF or DOCX." }
+const extractors = {
+  "application/pdf": async (buf: Buffer): Promise<string> => {
+    const parser = new PDFParse({ data: new Uint8Array(buf) })
+    try {
+      const { text } = await parser.getText()
+      return text?.trim() || ""
+    } finally {
+      await parser.destroy()
+    }
+  },
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": async (buf: Buffer) => 
+    (await mammoth.extractRawText({ buffer: buf })).value.trim(),
+  "application/msword": async (buf: Buffer) => 
+    (await mammoth.extractRawText({ buffer: buf })).value.trim(),
 }
 
-async function extractFromPdf(buffer: Buffer): Promise<ExtractResult> {
-  let parser: PDFParse | null = null
-  try {
-    parser = new PDFParse({ data: new Uint8Array(buffer) })
-    const textResult = await parser.getText()
-    const text = (textResult?.text ?? "").trim()
-    if (!text) return { ok: false, error: "No text could be extracted from the PDF." }
-    return { ok: true, text }
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to parse PDF"
-    return { ok: false, error: message }
-  } finally {
-    if (parser) await parser.destroy()
-  }
-}
+export async function extractTextFromCvFile(buffer: Buffer, mimeType: string): Promise<ExtractResult> {
+  const type = mimeType.toLowerCase() as keyof typeof extractors
+  const extractor = extractors[type]
 
-async function extractFromDocx(buffer: Buffer): Promise<ExtractResult> {
+  if (!extractor) return { ok: false, error: "Unsupported file type. Use PDF or DOCX." }
+
   try {
-    const result = await mammoth.extractRawText({ buffer })
-    const text = (result?.value ?? "").trim()
-    if (!text) return { ok: false, error: "No text could be extracted from the DOCX." }
+    const text = await extractor(buffer)
+    if (!text) return { ok: false, error: "No text could be extracted." }
     return { ok: true, text }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to parse DOCX"
-    return { ok: false, error: message }
+    return { ok: false, error: err instanceof Error ? err.message : "Extraction failed" }
   }
 }

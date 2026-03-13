@@ -11,11 +11,9 @@ export async function compileCvToPdf(cv: CvContent): Promise<Buffer> {
   const pdfPath = path.join(tmpDir, "cv.pdf")
 
   try {
-    const typSource = buildTypstDocument(cv)
-    await fs.writeFile(typPath, typSource, "utf-8")
+    await fs.writeFile(typPath, buildTypstDocument(cv), "utf-8")
     await typst.compile(typPath, pdfPath)
-    const pdfBuffer = await fs.readFile(pdfPath)
-    return pdfBuffer
+    return await fs.readFile(pdfPath)
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {})
   }

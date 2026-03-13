@@ -10,7 +10,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.41",
+    "@ai-sdk/google": "^3.0.43",
     "@phosphor-icons/react": "^2.1.10",
     "ai": "^6.0.116",
     "class-variance-authority": "^0.7.1",

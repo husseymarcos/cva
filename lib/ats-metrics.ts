@@ -1,69 +1,43 @@
 import type { JobAnalysisResult } from "@/types/job"
 import type { CvContent } from "@/types/cv"
 
-function cvToSearchableText(cv: CvContent): string {
-  const parts: string[] = [
-    cv.summary,
-    ...cv.experience.flatMap((e) => [e.role, e.company, ...e.bullets]),
-    ...cv.education.flatMap((e) => [e.degree, e.institution]),
-    ...cv.skills,
-  ]
-  return parts.join(" ").toLowerCase()
+const normalize = (s: string) => s.toLowerCase().trim().replace(/\s+/g, " ")
+
+const cvToText = (cv: CvContent) => [
+  cv.summary,
+  ...cv.experience.flatMap(e => [e.role, e.company, ...e.bullets]),
+  ...cv.education.flatMap(e => [e.degree, e.institution]),
+  ...cv.skills,
+].join(" ").toLowerCase()
+
+export function computeKeywordCoverage(job: JobAnalysisResult, cv: CvContent) {
+  const keywords = job.keywords.filter(Boolean)
+  if (!keywords.length) return { keywordCoverage: 100, coveredKeywords: [], missingKeywords: [] }
+
+  const text = cvToText(cv)
+  const covered = keywords.filter(kw => {
+    const n = normalize(kw)
+    return text.includes(n) || text.includes(n.replace(/\s+/g, ""))
+  })
+  
+  const missing = keywords.filter(kw => !covered.includes(kw))
+  const coverage = Math.round((covered.length / keywords.length) * 100)
+
+  return { keywordCoverage: coverage, coveredKeywords: covered, missingKeywords: missing }
 }
 
-function normalizeForMatch(s: string): string {
-  return s
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, " ")
-}
-
-export function computeKeywordCoverage(
-  jobAnalysis: JobAnalysisResult,
-  cv: CvContent,
-): {
-  keywordCoverage: number
-  coveredKeywords: string[]
-  missingKeywords: string[]
-} {
-  const keywords = jobAnalysis.keywords
-  if (keywords.length === 0) {
-    return { keywordCoverage: 100, coveredKeywords: [], missingKeywords: [] }
-  }
-
-  const text = cvToSearchableText(cv)
-  const covered: string[] = []
-  const missing: string[] = []
-
-  for (const kw of keywords) {
-    const n = normalizeForMatch(kw)
-    if (!n) continue
-    if (text.includes(n) || text.includes(n.replace(/\s+/g, ""))) {
-      covered.push(kw)
-    } else {
-      missing.push(kw)
-    }
-  }
-
-  const keywordCoverage =
-    keywords.length === 0 ? 100 : Math.round((covered.length / keywords.length) * 100)
-  return { keywordCoverage, coveredKeywords: covered, missingKeywords: missing }
-}
-
-export function computeAtsScore(
-  jobAnalysis: JobAnalysisResult,
-  cv: CvContent,
-): number {
-  const { keywordCoverage } = computeKeywordCoverage(jobAnalysis, cv)
+export function computeAtsScore(job: JobAnalysisResult, cv: CvContent) {
+  const { keywordCoverage } = computeKeywordCoverage(job, cv)
+  
   let score = keywordCoverage * 0.7
-
-  if (cv.summary?.trim()) score += 5
-  if (cv.experience.length > 0) score += 5
-  if (cv.education.length > 0) score += 5
-  if (cv.skills.length > 0) score += 5
-
-  const hasBullets = cv.experience.some((e) => e.bullets.length > 0)
-  if (hasBullets) score += 5
-
+  const bonuses = [
+    cv.summary.trim(),
+    cv.experience.length > 0,
+    cv.education.length > 0,
+    cv.skills.length > 0,
+    cv.experience.some(e => e.bullets.length > 0)
+  ]
+  
+  score += bonuses.filter(Boolean).length * 5
   return Math.min(100, Math.round(score))
 }
